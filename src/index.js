@@ -1,12 +1,13 @@
 const express = require("express");
-const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const PORT = 4000;
 
-const jobsRoute = require("./jobs.route");
-const userRouter = require("./src/routers/user");
+const app = express();
+
+const jobsRoute = require("./routers/jobs");
+const userRouter = require("./routers/user");
 
 //connecting database
 mongoose.Promise = global.Promise;

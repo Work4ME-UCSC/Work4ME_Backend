@@ -3,20 +3,21 @@ const Schema = mongoose.Schema;
 
 let Jobs = new Schema(
   {
-    // JobID: {
-    //   type: String,
-    // },
-
     JobTitle: {
       type: String,
+      required: true,
+      trim: true,
     },
 
     JobCategory: {
       type: String,
+      required: true,
     },
 
-    JobDescribtion: {
+    JobDescription: {
       type: String,
+      required: true,
+      trim: true,
     },
 
     JobDetails: {
@@ -29,6 +30,7 @@ let Jobs = new Schema(
 
     JobDay: {
       type: String,
+      required: true,
     },
 
     JobTime: {
@@ -37,17 +39,21 @@ let Jobs = new Schema(
 
     JobAddress: {
       type: String,
+      trim: true,
     },
 
     JobLocation: {
       type: String,
+      required: true,
     },
 
     Sex: {
       type: String,
+      required: true,
     },
   },
   {
+    timestamps: true,
     collection: "Jobs",
   }
 );
