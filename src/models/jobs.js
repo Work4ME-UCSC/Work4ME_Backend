@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-let Jobs = new Schema(
+let jobSchema = new Schema(
   {
     JobTitle: {
       type: String,
@@ -58,4 +58,16 @@ let Jobs = new Schema(
   }
 );
 
-module.exports = mongoose.model("Jobs", Jobs);
+jobSchema.pre("save", function (next) {
+  const job = this;
+
+  for (const [key, value] of Object.entries(job._doc)) {
+    if (value === null || value === "") {
+      delete job._doc[key];
+    }
+  }
+
+  next();
+});
+
+module.exports = mongoose.model("Jobs", jobSchema);
