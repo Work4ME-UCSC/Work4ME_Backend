@@ -76,7 +76,7 @@ router.get("/me", auth, async (req, res) => {
   res.send(req.user);
 });
 
-router.delete("/me", auth, async (req, res) => {
+router.delete("/employer/me", auth, async (req, res) => {
   try {
     await req.user.remove();
     cancelUserEmail(req.user.email, req.user.name);
