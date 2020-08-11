@@ -8,6 +8,7 @@ const app = express();
 
 const jobsRoute = require("./routers/jobs");
 const userRouter = require("./routers/user");
+const employeeJobsRouter = require("./routers/employeeJobs");
 
 //connecting database
 mongoose.Promise = global.Promise;
@@ -29,6 +30,7 @@ app.use(bodyParser.json());
 
 app.use("/jobs", jobsRoute);
 app.use("/users", userRouter);
+app.use("/employee", employeeJobsRouter);
 
 app.listen(PORT, function () {
   console.log("Server is running on Port: " + PORT);

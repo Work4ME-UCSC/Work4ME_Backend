@@ -61,6 +61,12 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.virtual("appliedJobs", {
+  ref: "EmployeeJobs",
+  localField: "_id",
+  foreignField: "owner",
+});
+
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
 
@@ -90,7 +96,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!isMatch) throw new Error("Unable to login");
+  if (!isMatch) throw new Error("Incorrect Password");
 
   return user;
 };
@@ -110,7 +116,7 @@ userSchema.pre("save", async function (next) {
 
 userSchema.pre("remove", async function (next) {
   const user = this;
-  await jobs.deleteMany({ owner: user._id });
+  if (user.userType === "employer") await jobs.deleteMany({ owner: user._id });
   next();
 });
 

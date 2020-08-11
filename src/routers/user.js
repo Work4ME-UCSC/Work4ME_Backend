@@ -76,7 +76,26 @@ router.get("/me", auth, async (req, res) => {
   res.send(req.user);
 });
 
+router.post("/verifyPassword", auth, async (req, res) => {
+  try {
+    await User.findByCredentials(req.user.email, req.body.password);
+    res.send("Correct Password");
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+});
+
 router.delete("/employer/me", auth, async (req, res) => {
+  try {
+    await req.user.remove();
+    cancelUserEmail(req.user.email, req.user.name);
+    res.send(req.user);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+router.delete("/employee/me", auth, async (req, res) => {
   try {
     await req.user.remove();
     cancelUserEmail(req.user.email, req.user.name);

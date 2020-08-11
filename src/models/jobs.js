@@ -57,12 +57,39 @@ let jobSchema = new Schema(
       required: true,
       ref: "User",
     },
+
+    applicants: [
+      {
+        applicantID: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
   },
   {
     timestamps: true,
     collection: "Jobs",
   }
 );
+
+jobSchema.methods.applyForJob = async function (applicantID) {
+  const job = this;
+
+  job.applicants = job.applicants.concat({ applicantID });
+
+  await job.save();
+};
+
+jobSchema.methods.cancelJobRequest = async function (applicantID) {
+  const job = this;
+
+  job.applicants = job.applicants.filter(
+    (apply) => apply.applicantID.toString() !== applicantID.toString()
+  );
+
+  await job.save();
+};
 
 jobSchema.pre("save", function (next) {
   const job = this;
