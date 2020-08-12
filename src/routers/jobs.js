@@ -1,6 +1,8 @@
 const express = require("express");
 
-let Jobs = require("../models/jobs");
+const Jobs = require("../models/jobs");
+const EmployeeJobs = require("../models/employeeJobs");
+
 const auth = require("../middleware/auth");
 
 const router = new express.Router();
@@ -42,6 +44,33 @@ router.get("/employer", auth, async (req, res) => {
     res.send(jobs);
   } catch (e) {
     res.status(500).send();
+  }
+});
+
+// Confirm a job
+
+router.post("/confirm/:id/:jobid", auth, async (req, res) => {
+  try {
+    const myJob = await Jobs.findById(req.params.jobid);
+    myJob.applicants = [];
+    await myJob.save();
+
+    const employeeJob = await EmployeeJobs.findOne({
+      owner: req.params.id,
+      jobID: req.params.jobid,
+    });
+
+    employeeJob.jobStatus = "confirmed";
+    await employeeJob.save();
+
+    await EmployeeJobs.deleteMany({
+      jobID: req.params.jobid,
+      jobStatus: "pending",
+    });
+
+    res.send("Job confrimed");
+  } catch (e) {
+    res.status(401).send(e);
   }
 });
 

@@ -15,10 +15,10 @@ router.post("/apply/:id", auth, async (req, res) => {
 
   try {
     await job.save();
-    res.status(201).send(job);
 
     const jobEmployer = await Jobs.findById(req.params.id);
     jobEmployer.applyForJob(req.user._id);
+    res.status(201).send(job);
   } catch (e) {
     res.status(400).send(e);
   }
