@@ -2,6 +2,7 @@ const express = require("express");
 const JobsRoutes = express.Router();
 
 let Jobs = require("../models/jobs");
+// const jobs = require("../models/jobs");
 
 JobsRoutes.route("/add").post(function (req, res) {
   console.log(req.body);
@@ -15,6 +16,16 @@ JobsRoutes.route("/add").post(function (req, res) {
       res.status(400).send(err);
     });
 });
+
+JobsRoutes.route('/get').get(function(req, res){
+  Jobs.find(function(err, jobs){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(jobs);
+    }
+  })
+})
 
 // app.get('/' ,(req,res) => {
 //     res.send('<h1> Hello Ram </h1>')
