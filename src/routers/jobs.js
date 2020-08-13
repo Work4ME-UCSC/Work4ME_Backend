@@ -49,26 +49,21 @@ router.get("/employer", auth, async (req, res) => {
 
 // Confirm a job
 
-router.post("/confirm/:id/:jobid", auth, async (req, res) => {
+router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
   try {
-    const myJob = await Jobs.findById(req.params.jobid);
+    const myJob = await Jobs.findById(req.params.jobID);
     myJob.applicants = [];
     await myJob.save();
 
     const employeeJob = await EmployeeJobs.findOne({
-      owner: req.params.id,
-      jobID: req.params.jobid,
+      owner: req.params.userID,
+      jobID: req.params.jobID,
     });
 
     employeeJob.jobStatus = "confirmed";
     await employeeJob.save();
 
-    await EmployeeJobs.deleteMany({
-      jobID: req.params.jobid,
-      jobStatus: "pending",
-    });
-
-    res.send("Job confrimed");
+    res.send({ message: "Job confrimed" });
   } catch (e) {
     res.status(401).send(e);
   }

@@ -11,6 +11,7 @@ router.post("/apply/:id", auth, async (req, res) => {
     owner: req.user._id,
     jobStatus: "pending",
     jobID: req.params.id,
+    jobTitle: req.body.jobTitle,
   });
 
   try {
@@ -46,9 +47,23 @@ router.delete("/cancelRequest/:id", auth, async (req, res) => {
     const mainJob = await Jobs.findById(jobID);
 
     mainJob.cancelJobRequest(req.user._id);
-    res.send("Deleted successfully");
+    res.send({ message: "Deleted successfully" });
   } catch (e) {
     res.status(401).send(e);
+  }
+});
+
+// Delete other requests after confirmation
+
+router.delete("/deleteRequests/:jobID", auth, async (req, res) => {
+  try {
+    await EmployeeJobs.deleteMany({
+      jobID: req.params.jobID,
+      jobStatus: "pending",
+    });
+    res.send({ message: "Deleted pending requests" });
+  } catch (e) {
+    res.status(500).send();
   }
 });
 

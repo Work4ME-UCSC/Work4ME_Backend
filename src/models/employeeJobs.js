@@ -9,11 +9,11 @@ const jobSchema = new Schema(
       ref: "Jobs",
     },
 
-    // JobTitle: {
-    //   type: String,
-    //   required: true,
-    //   trim: true,
-    // },
+    jobTitle: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
     // JobCategory: {
     //   type: String,
