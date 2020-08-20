@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const PORT = 4000;
+const PORT = process.env.PORT;
 
 const app = express();
 
@@ -12,21 +12,20 @@ const employeeJobsRouter = require("./routers/employeeJobs");
 
 //connecting database
 mongoose.Promise = global.Promise;
-mongoose
-  .connect("mongodb://127.0.0.1:27017/WORK4ME_APP", { useNewUrlParser: true })
-  .then(
-    () => {
-      console.log("Database is connected");
-    },
-    (err) => {
-      console.log("Can not connect to the database" + err);
-    }
-  );
+mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true }).then(
+  () => {
+    console.log("Database is connected");
+    console.log("Server is up on port " + PORT);
+  },
+  (err) => {
+    console.log("Can not connect to the database" + err);
+  }
+);
 
 //attaching the cors and body-parser middleware to express server
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/jobs", jobsRoute);
 app.use("/users", userRouter);

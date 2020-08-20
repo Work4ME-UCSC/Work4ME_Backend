@@ -58,6 +58,11 @@ let jobSchema = new Schema(
       ref: "User",
     },
 
+    open: {
+      type: Boolean,
+      required: true,
+    },
+
     applicants: [
       {
         applicantID: {

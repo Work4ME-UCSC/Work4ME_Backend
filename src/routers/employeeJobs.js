@@ -28,7 +28,11 @@ router.post("/apply/:id", auth, async (req, res) => {
 router.get("/apply", auth, async (req, res) => {
   try {
     //const appliedJobs = await EmployeeJobs.find({ owner: req.user._id });
-    await req.user.populate("appliedJobs").execPopulate();
+    const match = {};
+
+    if (req.query.status) match.jobStatus = req.query.status;
+
+    await req.user.populate({ path: "appliedJobs", match }).execPopulate();
 
     res.send(req.user.appliedJobs);
   } catch (e) {

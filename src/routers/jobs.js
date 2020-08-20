@@ -13,6 +13,7 @@ router.post("/add", auth, function (req, res) {
   let jobs = new Jobs({
     ...req.body,
     owner: req.user._id,
+    open: true,
   });
 
   jobs
@@ -29,7 +30,7 @@ router.post("/add", auth, function (req, res) {
 
 router.get("/alljobs", async (req, res) => {
   try {
-    const jobs = await Jobs.find({});
+    const jobs = await Jobs.find({ open: true });
     res.send(jobs);
   } catch (e) {
     res.status(500).send();
@@ -53,6 +54,7 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
   try {
     const myJob = await Jobs.findById(req.params.jobID);
     myJob.applicants = [];
+    myJob.open = false;
     await myJob.save();
 
     const employeeJob = await EmployeeJobs.findOne({
