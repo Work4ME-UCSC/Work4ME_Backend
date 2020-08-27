@@ -124,7 +124,6 @@ const upload = multer({
     fileSize: 1024 * 1024 * 5, //filesize is 5mb
   },
   fileFilter(req, file, cb) {
-    console.log(file);
     if (!file.originalname.match(/.(jpg|jpeg|png)$/)) {
       cb(new Error("Please upload an image"));
     }
@@ -140,18 +139,17 @@ router.post(
   auth,
   upload.single("avatar"),
   async (req, res) => {
-    console.log(req.file.path);
+    console.log(req.file);
 
     const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
       upload_preset: "profile_pictures",
       folder: "profile_pictures/",
       public_id: req.user._id,
     });
-    console.log(uploadResponse);
-    //const buffer = await sharp(req.file.path).resize(250, 250);
+
     req.user.avatar = uploadResponse.url;
     await req.user.save();
-    res.send({ message: "Success" });
+    res.send({ url: uploadResponse.url });
   },
   (error, req, res, next) => {
     console.log(error);
