@@ -30,7 +30,9 @@ router.post("/add", auth, function (req, res) {
 
 router.get("/alljobs", async (req, res) => {
   try {
-    const jobs = await Jobs.find({ open: true });
+    const jobs = await Jobs.find({ open: true }).populate({
+      path: "owner",
+    });
     res.send(jobs);
   } catch (e) {
     res.status(500).send();
@@ -43,6 +45,18 @@ router.get("/employer", auth, async (req, res) => {
   try {
     const jobs = await Jobs.find({ owner: req.user._id });
     res.send(jobs);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+router.get("/requests", auth, async (req, res) => {
+  try {
+    const requests = await Jobs.find({
+      owner: req.user._id,
+      open: true,
+    }).populate({ path: "applicants.applicantID" });
+    res.send(requests);
   } catch (e) {
     res.status(500).send();
   }

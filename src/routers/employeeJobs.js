@@ -11,7 +11,7 @@ router.post("/apply/:id", auth, async (req, res) => {
     owner: req.user._id,
     jobStatus: "pending",
     jobID: req.params.id,
-    jobTitle: req.body.jobTitle,
+    jobDetails: req.params.id,
   });
 
   try {
@@ -27,12 +27,17 @@ router.post("/apply/:id", auth, async (req, res) => {
 
 router.get("/apply", auth, async (req, res) => {
   try {
-    //const appliedJobs = await EmployeeJobs.find({ owner: req.user._id });
     const match = {};
 
     if (req.query.status) match.jobStatus = req.query.status;
 
-    await req.user.populate({ path: "appliedJobs", match }).execPopulate();
+    await req.user
+      .populate({
+        path: "appliedJobs",
+        populate: { path: "jobDetails" },
+        match,
+      })
+      .execPopulate();
 
     res.send(req.user.appliedJobs);
   } catch (e) {

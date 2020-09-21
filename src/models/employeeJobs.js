@@ -9,37 +9,11 @@ const jobSchema = new Schema(
       ref: "Jobs",
     },
 
-    jobTitle: {
-      type: String,
+    jobDetails: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
-      trim: true,
+      ref: "Jobs",
     },
-
-    // JobCategory: {
-    //   type: String,
-    //   required: true,
-    // },
-
-    // JobDescription: {
-    //   type: String,
-    //   required: true,
-    //   trim: true,
-    // },
-
-    // JobDay: {
-    //   type: String,
-    //   required: true,
-    // },
-
-    // JobAddress: {
-    //   type: String,
-    //   trim: true,
-    // },
-
-    // JobLocation: {
-    //   type: String,
-    //   required: true,
-    // },
 
     owner: {
       type: mongoose.Schema.Types.ObjectId,
@@ -51,12 +25,6 @@ const jobSchema = new Schema(
       type: String,
       required: true,
     },
-
-    // employer: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   required: true,
-    //   ref: "Users",
-    // },
   },
   {
     timestamps: true,
