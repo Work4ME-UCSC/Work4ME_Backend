@@ -28,10 +28,10 @@ let jobSchema = new Schema(
       type: String,
     },
 
-    JobDay: {
-      type: String,
-      required: true,
-    },
+    // JobDay: {
+    //   type: String,
+    //   required: true,
+    // },
 
     JobTime: {
       type: String,

@@ -18,7 +18,7 @@ const jobSchema = new Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
 
     jobStatus: {

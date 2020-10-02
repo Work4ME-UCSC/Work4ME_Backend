@@ -11,6 +11,21 @@ const sendWelcomeEmail = (email, name) => {
   });
 };
 
+const sendVerificationEmail = (email, host, token) => {
+  sgMail.send({
+    to: email,
+    from: "2017cs085@stu.ucsc.cmb.ac.lk",
+    subject: "Verify your account",
+    text:
+      "Hello,\n\n" +
+      "Please verify your account by clicking the link: \nhttp://" +
+      host +
+      "/users/confirmation/" +
+      token +
+      "\n",
+  });
+};
+
 const cancelUserEmail = (email, name) => {
   sgMail.send({
     to: email,
@@ -22,5 +37,6 @@ const cancelUserEmail = (email, name) => {
 
 module.exports = {
   sendWelcomeEmail,
+  sendVerificationEmail,
   cancelUserEmail,
 };
