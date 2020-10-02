@@ -3,6 +3,8 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const jobs = require("./jobs");
+
 const userSchema = new mongoose.Schema(
   {
     userType: {
@@ -51,7 +53,7 @@ const userSchema = new mongoose.Schema(
     ],
 
     avatar: {
-      type: Buffer,
+      type: String,
     },
   },
   {
@@ -59,10 +61,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.virtual("appliedJobs", {
+  ref: "EmployeeJobs",
+  localField: "_id",
+  foreignField: "owner",
+});
+
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
 
-  const token = jwt.sign({ _id: user._id.toString() }, "MYTOKEN");
+  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
 
   user.tokens = user.tokens.concat({ token });
   await user.save();
@@ -76,7 +84,6 @@ userSchema.methods.toJSON = function () {
 
   delete userObject.password;
   delete userObject.tokens;
-  delete userObject.avatar;
 
   return userObject;
 };
@@ -88,7 +95,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!isMatch) throw new Error("Unable to login");
+  if (!isMatch) throw new Error("Incorrect Password");
 
   return user;
 };
@@ -101,6 +108,14 @@ userSchema.pre("save", async function (next) {
     user.password = await bcrypt.hash(user.password, 8);
   }
 
+  next();
+});
+
+//Delete the jobs posted by the user when user get deleted
+
+userSchema.pre("remove", async function (next) {
+  const user = this;
+  if (user.userType === "employer") await jobs.deleteMany({ owner: user._id });
   next();
 });
 

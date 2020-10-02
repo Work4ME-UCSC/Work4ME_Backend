@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-let Jobs = new Schema(
+let jobSchema = new Schema(
   {
     JobTitle: {
       type: String,
@@ -51,6 +51,26 @@ let Jobs = new Schema(
       type: String,
       required: true,
     },
+
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+
+    open: {
+      type: Boolean,
+      required: true,
+    },
+
+    applicants: [
+      {
+        applicantID: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -58,4 +78,34 @@ let Jobs = new Schema(
   }
 );
 
-module.exports = mongoose.model("Jobs", Jobs);
+jobSchema.methods.applyForJob = async function (applicantID) {
+  const job = this;
+
+  job.applicants = job.applicants.concat({ applicantID });
+
+  await job.save();
+};
+
+jobSchema.methods.cancelJobRequest = async function (applicantID) {
+  const job = this;
+
+  job.applicants = job.applicants.filter(
+    (apply) => apply.applicantID.toString() !== applicantID.toString()
+  );
+
+  await job.save();
+};
+
+jobSchema.pre("save", function (next) {
+  const job = this;
+
+  for (const [key, value] of Object.entries(job._doc)) {
+    if (value === null || value === "") {
+      delete job._doc[key];
+    }
+  }
+
+  next();
+});
+
+module.exports = mongoose.model("Jobs", jobSchema);

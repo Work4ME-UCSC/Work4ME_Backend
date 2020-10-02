@@ -1,12 +1,17 @@
 const express = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
+const fs = require("fs");
+
+const dir = "./uploads";
 const User = require("../models/user");
 const auth = require("../middleware/auth");
-
 const { sendWelcomeEmail, cancelUserEmail } = require("../emails/account");
+const cloudinary = require("../utils/cloudinary");
 
 const router = new express.Router();
+
+if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
 router.post("/signup", async (req, res) => {
   const user = new User(req.body);
@@ -76,7 +81,16 @@ router.get("/me", auth, async (req, res) => {
   res.send(req.user);
 });
 
-router.delete("/me", auth, async (req, res) => {
+router.post("/verifyPassword", auth, async (req, res) => {
+  try {
+    await User.findByCredentials(req.user.email, req.body.password);
+    res.send("Correct Password");
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+});
+
+router.delete("/employer/me", auth, async (req, res) => {
   try {
     await req.user.remove();
     cancelUserEmail(req.user.email, req.user.name);
@@ -86,9 +100,28 @@ router.delete("/me", auth, async (req, res) => {
   }
 });
 
+router.delete("/employee/me", auth, async (req, res) => {
+  try {
+    await req.user.remove();
+    cancelUserEmail(req.user.email, req.user.name);
+    res.send(req.user);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${req.user._id}.${file.originalname.split(".").pop()}`);
+  },
+});
+
 const upload = multer({
   limits: {
-    fileSize: 1000000,
+    fileSize: 1024 * 1024 * 5, //filesize is 5mb
   },
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/.(jpg|jpeg|png)$/)) {
@@ -97,6 +130,8 @@ const upload = multer({
 
     cb(undefined, true);
   },
+
+  storage,
 });
 
 router.post(
@@ -104,21 +139,26 @@ router.post(
   auth,
   upload.single("avatar"),
   async (req, res) => {
-    const buffer = await sharp(req.file.buffer)
-      .resize({ width: 250, height: 250 })
-      .png()
-      .toBuffer();
-    req.user.avatar = buffer;
+    console.log(req.file);
+
+    const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
+      upload_preset: "profile_pictures",
+      folder: "profile_pictures/",
+      public_id: req.user._id,
+    });
+
+    req.user.avatar = uploadResponse.url;
     await req.user.save();
-    res.send();
+    res.send({ url: uploadResponse.url });
   },
   (error, req, res, next) => {
+    console.log(error);
     res.status(400).send({ error: error.message });
   }
 );
 
 router.delete("/me/avatar", auth, async (req, res) => {
-  req.user.avatar = undefined;
+  req.user.avatar = null;
   await req.user.save();
   res.status(200).send();
 });
@@ -128,13 +168,13 @@ router.get("/:id/avatar", async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (!user || !user.avatar) {
-      throw new Error();
+      throw new Error("Image not found");
     }
 
     res.set("Content-Type", "image/png");
     res.send(user.avatar);
   } catch (e) {
-    res.status(404).send();
+    res.status(404).send({ error: e.message });
   }
 });
 
