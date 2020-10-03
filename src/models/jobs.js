@@ -9,32 +9,20 @@ let jobSchema = new Schema(
       trim: true,
     },
 
-    JobCategory: {
-      type: String,
-      required: true,
-    },
-
     JobDescription: {
       type: String,
       required: true,
       trim: true,
     },
 
-    JobDetails: {
+    JobCategory: {
       type: String,
+      required: true,
     },
 
-    JobSalary: {
+    JobLocation: {
       type: String,
-    },
-
-    // JobDay: {
-    //   type: String,
-    //   required: true,
-    // },
-
-    JobTime: {
-      type: String,
+      required: true,
     },
 
     JobAddress: {
@@ -42,9 +30,12 @@ let jobSchema = new Schema(
       trim: true,
     },
 
-    JobLocation: {
+    JobSalary: {
       type: String,
-      required: true,
+    },
+
+    JobDate: {
+      type: String,
     },
 
     Sex: {
