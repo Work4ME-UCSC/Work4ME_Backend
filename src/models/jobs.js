@@ -43,6 +43,10 @@ let jobSchema = new Schema(
       required: true,
     },
 
+    JobImage: {
+      type: String,
+    },
+
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

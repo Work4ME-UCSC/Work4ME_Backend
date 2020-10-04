@@ -4,26 +4,39 @@ const Jobs = require("../models/jobs");
 const EmployeeJobs = require("../models/employeeJobs");
 
 const auth = require("../middleware/auth");
+const cloudinary = require("../utils/cloudinary");
 
 const router = new express.Router();
 
 //To create a job
 
-router.post("/add", auth, function (req, res) {
-  let jobs = new Jobs({
-    ...req.body,
-    owner: req.user._id,
-    open: true,
-  });
+router.post("/add", auth, async (req, res) => {
+  let JobImage;
 
-  jobs
-    .save()
-    .then((jobs) => {
-      res.status(201).json(jobs);
-    })
-    .catch((err) => {
-      res.status(400).send(err);
+  try {
+    if (req.body.JobImage) {
+      const imgStr = req.body.JobImage;
+      const uploadResponse = await cloudinary.uploader.upload(imgStr, {
+        upload_preset: "job_images",
+        folder: "job_images",
+      });
+      JobImage = uploadResponse.url;
+    } else {
+      JobImage = "";
+    }
+    const jobs = new Jobs({
+      ...req.body,
+      JobImage,
+      owner: req.user._id,
+      open: true,
     });
+
+    const newJob = await jobs.save();
+
+    res.status(201).json(newJob);
+  } catch (e) {
+    res.status(400).send(err);
+  }
 });
 
 //Get all the jobs available
@@ -73,15 +86,46 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
 
     const employeeJob = await EmployeeJobs.findOne({
       owner: req.params.userID,
-      jobID: req.params.jobID,
+      jobDetails: req.params.jobID,
     });
 
     employeeJob.jobStatus = "confirmed";
     await employeeJob.save();
 
+    // Delete other requests after confirmation
+
+    await EmployeeJobs.deleteMany({
+      jobDetails: req.params.jobID,
+      jobStatus: "pending",
+    });
+
     res.send({ message: "Job confrimed" });
   } catch (e) {
     res.status(401).send(e);
+  }
+});
+
+// Reject a job request
+
+router.delete("/reject/:jobID/:userID", auth, async (req, res) => {
+  try {
+    const jobID = req.params.jobID;
+    const userID = req.params.userID;
+
+    const job = await Jobs.findById(jobID);
+    job.applicants = job.applicants.filter(
+      (applicant) => applicant.applicantID.toString() !== userID.toString()
+    );
+    await job.save();
+
+    await EmployeeJobs.findOneAndDelete({
+      jobDetails: jobID,
+      owner: userID,
+    });
+
+    res.status(201).send({ message: "Rejected successfully" });
+  } catch (e) {
+    res.status(401).send({ error: e });
   }
 });
 
