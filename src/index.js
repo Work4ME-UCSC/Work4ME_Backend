@@ -9,6 +9,7 @@ const app = express();
 const jobsRoute = require("./routers/jobs");
 const userRouter = require("./routers/user");
 const employeeJobsRouter = require("./routers/employeeJobs");
+const reviewRoute = require("./routers/review");
 
 //connecting database
 mongoose.Promise = global.Promise;
@@ -30,6 +31,7 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 app.use("/jobs", jobsRoute);
 app.use("/users", userRouter);
 app.use("/employee", employeeJobsRouter);
+app.use("/review", reviewRoute);
 
 app.listen(PORT, function () {
   console.log("Server is running on Port: " + PORT);

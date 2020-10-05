@@ -21,6 +21,16 @@ const jobSchema = new Schema(
       type: String,
       required: true,
     },
+
+    isEmployerReviewed: {
+      type: Number,
+      default: 0,
+    },
+
+    isEmployeeReviewed: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

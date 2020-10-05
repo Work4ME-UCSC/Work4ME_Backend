@@ -1,37 +1,66 @@
-const express = require('express');
-const UserReviewRoutes = express.Router();
+const express = require("express");
+const router = new express.Router();
 
-let UserReview = require('./review');
+const UserReview = require("../models/review");
+const auth = require("../middleware/auth");
+const EmployeeJobs = require("../models/employeeJobs");
+const User = require("../models/user");
 
+router.post("/add", auth, async (req, res) => {
+  const jobID = req.body.jobID;
+  const userType = req.user.userType;
 
-UserReviewRoutes.route('/addReview').post(function(req, res){
+  try {
+    const userReview = new UserReview({
+      ReviewByWhom: req.user._id,
+      ReviewToWhom: req.body.to,
+      ReviewScore: req.body.rate,
+      ReviewContent: req.body.review,
+    });
 
-    let userReview = new UserReview(req.body);
-    userReview.save()
-    .then(userReview=> {
-        res.status(200).json({ 'UserReview': 'Review added successfully' });
-      })
-      .catch(err => {
-        res.status(400).send("unable to save to database");
-      });
+    await userReview.save();
+
+    const reviewBy =
+      userType === "employer" ? "isEmployerReviewed" : "isEmployeeReviewed";
+
+    const employeeJob = await EmployeeJobs.findOne({
+      jobDetails: jobID,
+    });
+
+    employeeJob[reviewBy] = req.body.rate;
+    await employeeJob.save();
+
+    const reviewdUser = await User.findById(req.body.to);
+    reviewdUser.rate = (
+      (reviewdUser.rate * reviewdUser.reviewCount + req.body.rate) /
+      (reviewdUser.reviewCount + 1)
+    ).toFixed(1);
+
+    reviewdUser.reviewCount = reviewdUser.reviewCount + 1;
+    await reviewdUser.save();
+
+    res.status(201).send({ message: "Review added successfully" });
+  } catch (e) {
+    res.status(400).send({ error: e });
+  }
 });
 
 //retrieve a review for the user profile
-UserReviewRoutes.route('/retrieveReview').post(function (req,res){
-   
-    var userID = req.body.id;
-  
-    UserReview.findOne({ReviewToWhom: userID})
-      .then(response=>{
-          res.status(200).send({
-            reviewBody: response
-         })
-  
-         console.log("Successfully retrieved");
-      })
-  
-      .catch(err=>{
-          console.log("Error while retrieving review");
-      })
-  }) 
+router.route("/retrieveReview").post(function (req, res) {
+  var userID = req.body.id;
 
+  UserReview.findOne({ ReviewToWhom: userID })
+    .then((response) => {
+      res.status(200).send({
+        reviewBody: response,
+      });
+
+      console.log("Successfully retrieved");
+    })
+
+    .catch((err) => {
+      console.log("Error while retrieving review");
+    });
+});
+
+module.exports = router;

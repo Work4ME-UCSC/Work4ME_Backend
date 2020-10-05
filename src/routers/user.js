@@ -61,7 +61,8 @@ router.get("/confirmation/:token", async (req, res) => {
         .status(400)
         .send({ error: "We were unable to find a user for this token." });
 
-    if (user.isVerified) return res.status.send({ error: "Already verified" });
+    if (user.isVerified)
+      return res.status(400).send({ error: "Already verified" });
 
     user.isVerified = true;
     await user.save();

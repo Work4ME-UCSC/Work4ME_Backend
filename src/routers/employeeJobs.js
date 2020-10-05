@@ -2,6 +2,7 @@ const express = require("express");
 
 const Jobs = require("../models/jobs");
 const EmployeeJobs = require("../models/employeeJobs");
+const User = require("../models/user");
 const auth = require("../middleware/auth");
 
 const router = new express.Router();
@@ -71,6 +72,14 @@ router.patch("/jobFinished/:id", auth, async (req, res) => {
 
     job.jobStatus = "finished";
     await job.save();
+
+    const employee = await User.findById(req.user._id);
+    employee.jobCompleted = employee.jobCompleted + 1;
+    await employee.save();
+
+    const employer = await User.findById(req.body.employerID);
+    employer.jobCompleted = employer.jobCompleted + 1;
+    await employer.save();
 
     res.status(201).send({ message: "Job finished" });
   } catch (e) {
