@@ -2,11 +2,17 @@ const express = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
+const crypto = require("crypto");
 
 const dir = "./uploads";
 const User = require("../models/user");
+const UserToken = require("../models/userToken");
 const auth = require("../middleware/auth");
-const { sendWelcomeEmail, cancelUserEmail } = require("../emails/account");
+const {
+  sendWelcomeEmail,
+  cancelUserEmail,
+  sendVerificationEmail,
+} = require("../emails/account");
 const cloudinary = require("../utils/cloudinary");
 
 const router = new express.Router();
@@ -18,9 +24,50 @@ router.post("/signup", async (req, res) => {
 
   try {
     await user.save();
-    sendWelcomeEmail(user.email, user.name);
+    const verificationToken = new UserToken({
+      userId: user._id,
+      token: crypto.randomBytes(16).toString("hex"),
+    });
+    await verificationToken.save();
+
     const token = await user.generateAuthToken();
+    sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
+    sendVerificationEmail(
+      user.email,
+      req.header("host"),
+      verificationToken.token
+    );
+    console.log(req.header("host"));
     res.status(201).send({ user, token });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.get("/confirmation/:token", async (req, res) => {
+  try {
+    const token = await UserToken.findOne({
+      token: req.params.token,
+    });
+
+    if (!token)
+      return res
+        .status(400)
+        .send({ error: "We were unable to find the valid token" });
+
+    const user = await User.findOne({ _id: token.userId });
+    if (!user)
+      return res
+        .status(400)
+        .send({ error: "We were unable to find a user for this token." });
+
+    if (user.isVerified)
+      return res.status(400).send({ error: "Already verified" });
+
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).send("The account has been verified.");
   } catch (e) {
     res.status(400).send(e);
   }

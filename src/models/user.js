@@ -43,6 +43,29 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    rate: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
+    jobCompleted: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
+    reviewCount: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
     tokens: [
       {
         token: {

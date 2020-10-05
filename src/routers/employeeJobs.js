@@ -2,6 +2,7 @@ const express = require("express");
 
 const Jobs = require("../models/jobs");
 const EmployeeJobs = require("../models/employeeJobs");
+const User = require("../models/user");
 const auth = require("../middleware/auth");
 
 const router = new express.Router();
@@ -34,7 +35,7 @@ router.get("/apply", auth, async (req, res) => {
     await req.user
       .populate({
         path: "appliedJobs",
-        populate: { path: "jobDetails" },
+        populate: { path: "jobDetails", populate: "owner" },
         match,
       })
       .execPopulate();
@@ -52,7 +53,7 @@ router.delete("/cancelRequest/:id", auth, async (req, res) => {
       owner: req.user._id,
     });
 
-    const jobID = job.jobID;
+    const jobID = job.jobDetails;
     const mainJob = await Jobs.findById(jobID);
 
     mainJob.cancelJobRequest(req.user._id);
@@ -62,17 +63,27 @@ router.delete("/cancelRequest/:id", auth, async (req, res) => {
   }
 });
 
-// Delete other requests after confirmation
-
-router.delete("/deleteRequests/:jobID", auth, async (req, res) => {
+router.patch("/jobFinished/:id", auth, async (req, res) => {
   try {
-    await EmployeeJobs.deleteMany({
-      jobID: req.params.jobID,
-      jobStatus: "pending",
+    const job = await EmployeeJobs.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
     });
-    res.send({ message: "Deleted pending requests" });
+
+    job.jobStatus = "finished";
+    await job.save();
+
+    const employee = await User.findById(req.user._id);
+    employee.jobCompleted = employee.jobCompleted + 1;
+    await employee.save();
+
+    const employer = await User.findById(req.body.employerID);
+    employer.jobCompleted = employer.jobCompleted + 1;
+    await employer.save();
+
+    res.status(201).send({ message: "Job finished" });
   } catch (e) {
-    res.status(500).send();
+    res.status(401).send(e);
   }
 });
 
