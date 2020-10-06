@@ -8,17 +8,17 @@ const auth = require("../middleware/auth");
 const router = new express.Router();
 
 router.post("/apply/:id", auth, async (req, res) => {
-  let job = new EmployeeJobs({
-    owner: req.user._id,
-    jobStatus: "pending",
-    jobID: req.params.id,
-    jobDetails: req.params.id,
-  });
-
   try {
+    const jobEmployer = await Jobs.findById(req.params.id);
+    let job = new EmployeeJobs({
+      owner: req.user._id,
+      jobStatus: "pending",
+      jobID: req.params.id,
+      jobDetails: req.params.id,
+      employerID: jobEmployer.owner,
+    });
     await job.save();
 
-    const jobEmployer = await Jobs.findById(req.params.id);
     jobEmployer.applyForJob(req.user._id);
     res.status(201).send(job);
   } catch (e) {

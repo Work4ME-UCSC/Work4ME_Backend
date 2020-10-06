@@ -63,6 +63,26 @@ router.get("/employer", auth, async (req, res) => {
   }
 });
 
+router.get("/selectedJobs", auth, async (req, res) => {
+  try {
+    const match = {};
+
+    if (req.query.status) match.jobStatus = req.query.status;
+
+    await req.user
+      .populate({
+        path: "pastJobs",
+        populate: [{ path: "jobDetails" }, { path: "owner" }],
+        match,
+      })
+      .execPopulate();
+
+    res.send(req.user.pastJobs);
+  } catch (e) {
+    res.status(401).send(e);
+  }
+});
+
 router.get("/requests", auth, async (req, res) => {
   try {
     const requests = await Jobs.find({
