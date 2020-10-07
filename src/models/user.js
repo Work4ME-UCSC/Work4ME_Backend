@@ -90,6 +90,12 @@ userSchema.virtual("appliedJobs", {
   foreignField: "owner",
 });
 
+userSchema.virtual("pastJobs", {
+  ref: "EmployeeJobs",
+  localField: "_id",
+  foreignField: "employerID",
+});
+
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
 

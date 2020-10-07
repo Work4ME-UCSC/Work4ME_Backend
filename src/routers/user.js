@@ -3,15 +3,18 @@ const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
 const crypto = require("crypto");
+const otpGenerator = require("otp-generator");
 
 const dir = "./uploads";
 const User = require("../models/user");
 const UserToken = require("../models/userToken");
+const UserOtp = require("../models/userOtp");
 const auth = require("../middleware/auth");
 const {
   sendWelcomeEmail,
   cancelUserEmail,
   sendVerificationEmail,
+  sendOtpEmail,
 } = require("../emails/account");
 const cloudinary = require("../utils/cloudinary");
 
@@ -31,13 +34,13 @@ router.post("/signup", async (req, res) => {
     await verificationToken.save();
 
     const token = await user.generateAuthToken();
-    sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
     sendVerificationEmail(
       user.email,
       req.header("host"),
       verificationToken.token
     );
-    console.log(req.header("host"));
+    sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
+
     res.status(201).send({ user, token });
   } catch (e) {
     res.status(400).send(e);
@@ -70,6 +73,83 @@ router.get("/confirmation/:token", async (req, res) => {
     res.status(200).send("The account has been verified.");
   } catch (e) {
     res.status(400).send(e);
+  }
+});
+
+router.post("/otpRequest", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user)
+      throw new Error(`We couldn't find an account associated with ${email}`);
+
+    const otpExist = await UserOtp.findOne({ userId: user._id });
+    if (otpExist)
+      throw new Error(
+        "Already requested for OTP. Please try again after 5 minutes"
+      );
+
+    const otp = otpGenerator.generate(6, {
+      upperCase: false,
+      specialChars: false,
+      alphabets: false,
+    });
+
+    const otpUser = new UserOtp({
+      userId: user._id,
+      otp,
+    });
+
+    await otpUser.save();
+
+    sendOtpEmail(email, otp);
+
+    res.status(200).send({ message: "OTP send successfully" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+router.post("/otpConfirm", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user) throw new Error("User not found");
+
+    const otpExist = await UserOtp.findOne({ userId: user._id });
+    if (!otpExist) throw new Error("OTP expired. Please try again");
+
+    const otpUser = await UserOtp.findOne({
+      userId: user._id,
+    });
+
+    if (otpUser.otp === req.body.otp)
+      return res.status(200).send({ message: "OTP matches" });
+    else
+      throw new Error(
+        "The verification code you entered isn't valid. Please check the code and try again"
+      );
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+router.post("/resetPassword", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user) throw new Error("User not found");
+
+    user.password = req.body.password;
+    user.tokens = [];
+    await user.save();
+
+    res.status(200).send({ message: "Password reset success" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
   }
 });
 

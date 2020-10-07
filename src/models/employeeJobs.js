@@ -10,8 +10,15 @@ const jobSchema = new Schema(
       ref: "Jobs",
     },
 
-    //EmployerID
+    //EmployeeID
     owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+
+    //EmployerID
+    employerID: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User",
