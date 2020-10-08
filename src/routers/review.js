@@ -63,4 +63,15 @@ router.route("/retrieveReview").post(function (req, res) {
     });
 });
 
+//retrieve all the reviews(shelani)
+router.route('/allreviews').get(function (req, res) {
+  UserReg.find( {$or: [{"userType" : 'Employer'}, {"userType" : 'Employee'}]}, function (err, reviews) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(reviews);
+    }
+  });
+});
+
 module.exports = router;
