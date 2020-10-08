@@ -5,6 +5,7 @@ const UserReview = require("../models/review");
 const auth = require("../middleware/auth");
 const EmployeeJobs = require("../models/employeeJobs");
 const User = require("../models/user");
+const { populate } = require("../models/employeeJobs");
 
 router.post("/add", auth, async (req, res) => {
   const jobID = req.body.jobID;
@@ -64,14 +65,11 @@ router.route("/retrieveReview").post(function (req, res) {
 });
 
 //retrieve all the reviews(shelani)
-router.route('/allreviews').get(function (req, res) {
-  UserReg.find( {$or: [{"userType" : 'Employer'}, {"userType" : 'Employee'}]}, function (err, reviews) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.json(reviews);
-    }
-  });
+router.get("/allreviews", async (req, res) => {
+  UserReview.find()
+    .populate(["ReviewByWhom", "ReviewToWhom"])
+    .then((result) => res.status(200).send(result))
+    .catch((err) => res.status.send({ error: err }));
 });
 
 module.exports = router;

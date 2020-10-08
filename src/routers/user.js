@@ -226,47 +226,49 @@ router.get("/:id/avatar", async (req, res) => {
 });
 
 //Admin adding Users
-router.route('/add').post(function (req, res) {
-  console.log(req.body)
+router.route("/add").post(function (req, res) {
+  console.log(req.body);
   const user = new User(req.body);
-  user.save()
-    .then(user => {
-      res.status(200).json({ 'user': 'User added successfully' });
-
+  user
+    .save()
+    .then((user) => {
+      res.status(200).json({ user: "User added successfully" });
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(400).send("unable to save to database");
     });
 });
 
-router.route('/').get(function(req, res) {
-  User.find(function(err, user) {
-      if (err) {
-          console.log(err);
-      } else {
-          res.json(user);
-      }
+router.route("/").get(function (req, res) {
+  User.find(function (err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(user);
+    }
   });
 });
 
 //get all employers count(shelani)
-router.route('/countEmployers').get(function (req,res){
-  User.find({"userType" : " Employer"}).countDocuments()
-  .then(response=>{
-    res.status(200).send({
-      employerCount: response
-    })
-  })
-})
-  
+router.route("/countEmployers").get(function (req, res) {
+  User.find({ userType: " employer" })
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        employerCount: response,
+      });
+    });
+});
+
 //get all employees count(shelani)
-router.route('/countEmployees').get(function (req,res){
-  User.find({"userType" : " Employee"}).countDocuments()
-  .then(response=>{
-    res.status(200).send({
-      employeeCount: response
-    })
-  })
-}) 
+router.route("/countEmployees").get(function (req, res) {
+  User.find({ userType: " employee" })
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        employeeCount: response,
+      });
+    });
+});
 
 module.exports = router;
