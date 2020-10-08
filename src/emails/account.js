@@ -49,9 +49,19 @@ const cancelUserEmail = (email, name) => {
   });
 };
 
+const sendJobConfirmEmail = (email, jobName, employerName) => {
+  sgMail.send({
+    to: email,
+    from: "2017cs085@stu.ucsc.cmb.ac.lk",
+    subject: `Job Confirmation (${jobName})`,
+    text: `Your job request for the job ${jobName} has been confirmed by the employer. You can cantact him for more details.`,
+  });
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
   cancelUserEmail,
   sendOtpEmail,
+  sendJobConfirmEmail,
 };

@@ -45,22 +45,16 @@ router.post("/add", auth, async (req, res) => {
   }
 });
 
-//retrieve a review for the user profile
-router.route("/retrieveReview").post(function (req, res) {
-  var userID = req.body.id;
+router.get("/retrieve/:id", auth, async (req, res) => {
+  try {
+    const review = await UserReview.find({
+      ReviewToWhom: req.params.id,
+    }).populate({ path: "ReviewByWhom" });
 
-  UserReview.findOne({ ReviewToWhom: userID })
-    .then((response) => {
-      res.status(200).send({
-        reviewBody: response,
-      });
-
-      console.log("Successfully retrieved");
-    })
-
-    .catch((err) => {
-      console.log("Error while retrieving review");
-    });
+    res.status(200).send({ review });
+  } catch (e) {
+    res.status(400).send({ error: e });
+  }
 });
 
 module.exports = router;
