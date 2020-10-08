@@ -49,7 +49,7 @@ const cancelUserEmail = (email, name) => {
   });
 };
 
-const sendJobConfirmEmail = (email, jobName, employerName) => {
+const sendJobConfirmEmail = (email, jobName) => {
   sgMail.send({
     to: email,
     from: "2017cs085@stu.ucsc.cmb.ac.lk",

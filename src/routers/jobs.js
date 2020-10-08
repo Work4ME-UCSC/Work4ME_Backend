@@ -2,9 +2,10 @@ const express = require("express");
 
 const Jobs = require("../models/jobs");
 const EmployeeJobs = require("../models/employeeJobs");
-
+const User = require("../models/user");
 const auth = require("../middleware/auth");
 const cloudinary = require("../utils/cloudinary");
+const { sendJobConfirmEmail } = require("../emails/account");
 
 const router = new express.Router();
 
@@ -104,6 +105,10 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
     myJob.open = false;
     await myJob.save();
 
+    const jobName = myJob.JobTitle;
+    const employee = await User.findById(req.params.userID);
+    const email = employee.email;
+
     const employeeJob = await EmployeeJobs.findOne({
       owner: req.params.userID,
       jobDetails: req.params.jobID,
@@ -118,6 +123,8 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
       jobDetails: req.params.jobID,
       jobStatus: "pending",
     });
+
+    sendJobConfirmEmail(email, jobName);
 
     res.send({ message: "Job confrimed" });
   } catch (e) {
