@@ -249,4 +249,24 @@ router.route('/').get(function(req, res) {
   });
 });
 
+//get all employers count(shelani)
+router.route('/countEmployers').get(function (req,res){
+  User.find({"userType" : " Employer"}).countDocuments()
+  .then(response=>{
+    res.status(200).send({
+      employerCount: response
+    })
+  })
+})
+  
+//get all employees count(shelani)
+router.route('/countEmployees').get(function (req,res){
+  User.find({"userType" : " Employee"}).countDocuments()
+  .then(response=>{
+    res.status(200).send({
+      employeeCount: response
+    })
+  })
+}) 
+
 module.exports = router;
