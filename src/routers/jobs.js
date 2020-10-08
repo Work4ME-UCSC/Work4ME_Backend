@@ -146,6 +146,26 @@ router.delete("/job/:id", auth, async (req, res) => {
   }
 });
 
+//get all jobs posted count(shelani)
+router.route('/jobsposted').get(function (req,res){
+  User.find({"_id" : "_id"}).countDocuments()
+  .then(response=>{
+    res.status(200).send({
+      jobsPosted: response
+    })
+  })
+}) 
+
+//get all jobs completed count(shelani)
+router.route('/jobscompleted').get(function (req,res){
+  User.find({"open" : "false"}).countDocuments()
+  .then(response=>{
+    res.status(200).send({
+      jobsCompleted: response
+    })
+  })
+})
+
 // app.get('/' ,(req,res) => {
 //     res.send('<h1> Hello Ram </h1>')
 // });
