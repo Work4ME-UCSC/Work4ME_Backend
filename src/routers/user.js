@@ -249,7 +249,7 @@ router.route("/").get(function (req, res) {
   });
 });
 
-//get all employers count(shelani)
+//get all employers count
 router.route("/countEmployers").get(function (req, res) {
   User.find({ userType: " employer" })
     .countDocuments()
@@ -260,7 +260,7 @@ router.route("/countEmployers").get(function (req, res) {
     });
 });
 
-//get all employees count(shelani)
+//get all employees count
 router.route("/countEmployees").get(function (req, res) {
   User.find({ userType: " employee" })
     .countDocuments()

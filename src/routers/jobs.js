@@ -146,7 +146,7 @@ router.delete("/job/:id", auth, async (req, res) => {
   }
 });
 
-//get all jobs posted count(shelani)
+//get all jobs posted count
 router.route("/jobsposted").get(function (req, res) {
   Jobs.find()
     .countDocuments()
@@ -157,7 +157,7 @@ router.route("/jobsposted").get(function (req, res) {
     });
 });
 
-//get all jobs completed count(shelani)
+//get all jobs completed count
 router.route("/jobscompleted").get(function (req, res) {
   EmployeeJobs.find({ jobStatus: "finished" })
     .countDocuments()
@@ -167,6 +167,48 @@ router.route("/jobscompleted").get(function (req, res) {
       });
     });
 });
+
+//count according to the job type
+router.route('/countjobType').post(function (req,res){
+  const jobTypeCount = [0,0,0];
+
+  Jobs.find()
+    .then(response=>{
+      for (let i=0; i<response.length; i++){
+        switch(response[i].JobCategory){
+          case("Gardening"):
+            jobTypeCount[0]++;
+            break;
+
+          case("Data Entry"):
+            jobTypeCount[1]++;
+            break;
+
+          case("Delivery Boy"):
+            jobTypeCount[2]++;
+            break;
+            
+          // case("Teaching"):
+          //   jobTypeCount[3]++;
+          //   break;
+
+          // case(""):
+          //   jobTypeCount[4]++;
+          //   break;
+
+          // case(""):
+          //   jobTypeCount[5]++;
+          //   break;
+        }
+    }
+
+    console.log(jobTypeCount);
+
+    res.status(200).send({
+      jobTypeCount: jobTypeCount
+    })
+  })
+})
 
 // app.get('/' ,(req,res) => {
 //     res.send('<h1> Hello Ram </h1>')
