@@ -64,7 +64,7 @@ router.route("/retrieveReview").post(function (req, res) {
     });
 });
 
-//retrieve all the reviews(shelani)
+//retrieve all the reviews
 router.get("/allreviews", async (req, res) => {
   UserReview.find()
     .populate(["ReviewByWhom", "ReviewToWhom"])
