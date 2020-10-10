@@ -169,14 +169,14 @@ router.route("/jobscompleted").get(function (req, res) {
 });
 
 //count according to the job type
-router.route('/countjobType').post(function (req,res){
+router.route('/countjobType').get(function (req,res){
   const jobTypeCount = [0,0,0];
 
   Jobs.find()
     .then(response=>{
       for (let i=0; i<response.length; i++){
         switch(response[i].JobCategory){
-          case("Gardening"):
+          case("IT"):
             jobTypeCount[0]++;
             break;
 

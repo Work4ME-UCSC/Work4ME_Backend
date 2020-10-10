@@ -5,7 +5,6 @@ const UserReview = require("../models/review");
 const auth = require("../middleware/auth");
 const EmployeeJobs = require("../models/employeeJobs");
 const User = require("../models/user");
-const { populate } = require("../models/employeeJobs");
 
 router.post("/add", auth, async (req, res) => {
   const jobID = req.body.jobID;
