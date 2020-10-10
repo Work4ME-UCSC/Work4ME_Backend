@@ -319,15 +319,36 @@ router.get("/:id/avatar", async (req, res) => {
 //     });
 // });
 
-//Admin get all users
-router.route('/').get(function(req, res) {
-  User.find(function(err, user) {
-      if (err) {
-          console.log(err);
-      } else {
-          res.json(user);
-      }
-  });
+// router.route("/").get(function (req, res) {
+//   User.find(function (err, user) {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       res.json(user);
+//     }
+//   });
+// });
+
+//get all employers count
+router.route("/countEmployers").get(function (req, res) {
+  User.find({ userType: " employer" })
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        employerCount: response,
+      });
+    });
+});
+
+//get all employees count
+router.route("/countEmployees").get(function (req, res) {
+  User.find({ userType: " employee" })
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        employeeCount: response,
+      });
+    });
 });
 
 //Get Users by ID

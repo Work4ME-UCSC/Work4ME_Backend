@@ -57,4 +57,12 @@ router.get("/retrieve/:id", auth, async (req, res) => {
   }
 });
 
+//retrieve all the reviews
+router.get("/allreviews", async (req, res) => {
+  UserReview.find()
+    .populate(["ReviewByWhom", "ReviewToWhom"])
+    .then((result) => res.status(200).send(result))
+    .catch((err) => res.status.send({ error: err }));
+});
+
 module.exports = router;
