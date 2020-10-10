@@ -319,15 +319,15 @@ router.get("/:id/avatar", async (req, res) => {
 //     });
 // });
 
-// router.route("/").get(function (req, res) {
-//   User.find(function (err, user) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       res.json(user);
-//     }
-//   });
-// });
+router.route("/").get(function (req, res) {
+  User.find(function (err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(user);
+    }
+  });
+});
 
 //get all employers count
 router.route("/countEmployers").get(function (req, res) {
