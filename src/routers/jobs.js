@@ -173,6 +173,70 @@ router.delete("/job/:id", auth, async (req, res) => {
   }
 });
 
+//get all jobs posted count
+router.route("/jobsposted").get(function (req, res) {
+  Jobs.find()
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        jobsPosted: response,
+      });
+    });
+});
+
+//get all jobs completed count
+router.route("/jobscompleted").get(function (req, res) {
+  EmployeeJobs.find({ jobStatus: "finished" })
+    .countDocuments()
+    .then((response) => {
+      res.status(200).send({
+        jobsCompleted: response,
+      });
+    });
+});
+
+//count according to the job type
+router.route('/countjobType').get(function (req,res){
+  const jobTypeCount = [0,0,0];
+
+  Jobs.find()
+    .then(response=>{
+      for (let i=0; i<response.length; i++){
+        switch(response[i].JobCategory){
+          case("IT"):
+            jobTypeCount[0]++;
+            break;
+
+          case("Data Entry"):
+            jobTypeCount[1]++;
+            break;
+
+          case("Delivery Boy"):
+            jobTypeCount[2]++;
+            break;
+            
+          // case("Teaching"):
+          //   jobTypeCount[3]++;
+          //   break;
+
+          // case(""):
+          //   jobTypeCount[4]++;
+          //   break;
+
+          // case(""):
+          //   jobTypeCount[5]++;
+          //   break;
+        }
+    }
+
+    console.log(jobTypeCount);
+
+    res.status(200).send({
+      jobTypeCount: jobTypeCount
+    })
+  })
+})
+
 // app.get('/' ,(req,res) => {
 //     res.send('<h1> Hello Ram </h1>')
 // });
