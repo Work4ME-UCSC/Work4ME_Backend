@@ -4,6 +4,7 @@ const sharp = require("sharp");
 const fs = require("fs");
 const crypto = require("crypto");
 const otpGenerator = require("otp-generator");
+const StreamChat = require("stream-chat").StreamChat;
 
 const dir = "./uploads";
 const User = require("../models/user");
@@ -21,6 +22,11 @@ const cloudinary = require("../utils/cloudinary");
 const router = new express.Router();
 
 if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+const stream = new StreamChat(
+  process.env.STREAM_API_KEY,
+  process.env.STREAM_SECRET_KEY
+);
 
 router.post("/signup", async (req, res) => {
   console.log(req.body)
@@ -42,7 +48,9 @@ router.post("/signup", async (req, res) => {
     );
     sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
 
-    res.status(201).send({ user, token });
+    const streamToken = stream.devToken(user._id);
+
+    res.status(201).send({ user, token, streamToken });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -174,10 +182,13 @@ router.post("/login", async (req, res) => {
     );
 
     const token = await user.generateAuthToken();
+    //const streamToken = stream.createToken(`khosalan`);
+    const streamToken = stream.devToken(user._id);
 
-    res.send({ user, token });
+    res.send({ user, token, streamToken });
   } catch (e) {
-    res.status(400).send(e);
+    console.log(e.message);
+    res.status(400).send(e.message);
   }
 });
 
