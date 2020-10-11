@@ -2,9 +2,10 @@ const express = require("express");
 
 const Jobs = require("../models/jobs");
 const EmployeeJobs = require("../models/employeeJobs");
-
+const User = require("../models/user");
 const auth = require("../middleware/auth");
 const cloudinary = require("../utils/cloudinary");
+const { sendJobConfirmEmail } = require("../emails/account");
 
 const router = new express.Router();
 
@@ -63,6 +64,26 @@ router.get("/employer", auth, async (req, res) => {
   }
 });
 
+router.get("/selectedJobs", auth, async (req, res) => {
+  try {
+    const match = {};
+
+    if (req.query.status) match.jobStatus = req.query.status;
+
+    await req.user
+      .populate({
+        path: "pastJobs",
+        populate: [{ path: "jobDetails" }, { path: "owner" }],
+        match,
+      })
+      .execPopulate();
+
+    res.send(req.user.pastJobs);
+  } catch (e) {
+    res.status(401).send(e);
+  }
+});
+
 router.get("/requests", auth, async (req, res) => {
   try {
     const requests = await Jobs.find({
@@ -84,6 +105,10 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
     myJob.open = false;
     await myJob.save();
 
+    const jobName = myJob.JobTitle;
+    const employee = await User.findById(req.params.userID);
+    const email = employee.email;
+
     const employeeJob = await EmployeeJobs.findOne({
       owner: req.params.userID,
       jobDetails: req.params.jobID,
@@ -98,6 +123,8 @@ router.patch("/confirm/:jobID/:userID", auth, async (req, res) => {
       jobDetails: req.params.jobID,
       jobStatus: "pending",
     });
+
+    sendJobConfirmEmail(email, jobName);
 
     res.send({ message: "Job confrimed" });
   } catch (e) {

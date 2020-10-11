@@ -3,15 +3,19 @@ const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
 const crypto = require("crypto");
+const otpGenerator = require("otp-generator");
+const StreamChat = require("stream-chat").StreamChat;
 
 const dir = "./uploads";
 const User = require("../models/user");
 const UserToken = require("../models/userToken");
+const UserOtp = require("../models/userOtp");
 const auth = require("../middleware/auth");
 const {
   sendWelcomeEmail,
   cancelUserEmail,
   sendVerificationEmail,
+  sendOtpEmail,
 } = require("../emails/account");
 const cloudinary = require("../utils/cloudinary");
 
@@ -19,7 +23,13 @@ const router = new express.Router();
 
 if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
+const stream = new StreamChat(
+  process.env.STREAM_API_KEY,
+  process.env.STREAM_SECRET_KEY
+);
+
 router.post("/signup", async (req, res) => {
+  console.log(req.body)
   const user = new User(req.body);
 
   try {
@@ -31,14 +41,16 @@ router.post("/signup", async (req, res) => {
     await verificationToken.save();
 
     const token = await user.generateAuthToken();
-    sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
     sendVerificationEmail(
       user.email,
       req.header("host"),
       verificationToken.token
     );
-    console.log(req.header("host"));
-    res.status(201).send({ user, token });
+    sendWelcomeEmail(user.email, user.firstName + " " + user.lastName);
+
+    const streamToken = stream.devToken(user._id);
+
+    res.status(201).send({ user, token, streamToken });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -73,6 +85,83 @@ router.get("/confirmation/:token", async (req, res) => {
   }
 });
 
+router.post("/otpRequest", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user)
+      throw new Error(`We couldn't find an account associated with ${email}`);
+
+    const otpExist = await UserOtp.findOne({ userId: user._id });
+    if (otpExist)
+      throw new Error(
+        "Already requested for OTP. Please try again after 5 minutes"
+      );
+
+    const otp = otpGenerator.generate(6, {
+      upperCase: false,
+      specialChars: false,
+      alphabets: false,
+    });
+
+    const otpUser = new UserOtp({
+      userId: user._id,
+      otp,
+    });
+
+    await otpUser.save();
+
+    sendOtpEmail(email, otp);
+
+    res.status(200).send({ message: "OTP send successfully" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+router.post("/otpConfirm", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user) throw new Error("User not found");
+
+    const otpExist = await UserOtp.findOne({ userId: user._id });
+    if (!otpExist) throw new Error("OTP expired. Please try again");
+
+    const otpUser = await UserOtp.findOne({
+      userId: user._id,
+    });
+
+    if (otpUser.otp === req.body.otp)
+      return res.status(200).send({ message: "OTP matches" });
+    else
+      throw new Error(
+        "The verification code you entered isn't valid. Please check the code and try again"
+      );
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+router.post("/resetPassword", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+
+    if (!user) throw new Error("User not found");
+
+    user.password = req.body.password;
+    user.tokens = [];
+    await user.save();
+
+    res.status(200).send({ message: "Password reset success" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
 router.post("/email", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -94,9 +183,12 @@ router.post("/login", async (req, res) => {
 
     const token = await user.generateAuthToken();
 
-    res.send({ user, token });
+    const streamToken = stream.devToken(user._id);
+
+    res.send({ user, token, streamToken });
   } catch (e) {
-    res.status(400).send(e);
+    console.log(e.message);
+    res.status(400).send(e.message);
   }
 });
 
@@ -210,44 +302,67 @@ router.delete("/me/avatar", auth, async (req, res) => {
   res.status(200).send();
 });
 
-router.get("/:id/avatar", async (req, res) => {
+router.patch("/updateEmail", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const email = req.body.email;
+    const password = req.body.password;
+    const oldEmail = req.user.email;
 
-    if (!user || !user.avatar) {
-      throw new Error("Image not found");
-    }
+    const user = await User.findByCredentials(oldEmail, password);
+    const checkUser = await User.findOne({ email });
 
-    res.set("Content-Type", "image/png");
-    res.send(user.avatar);
+    if (checkUser)
+      throw new Error("Email address already in user by another user!");
+
+    user.email = email;
+
+    await user.save();
+
+    res.status(200).send({ message: "Email change success" });
   } catch (e) {
-    res.status(404).send({ error: e.message });
+    res.status(400).send({ error: e.message });
   }
 });
 
-//Admin adding Users
-// router.route("/add").post(function (req, res) {
-//   console.log(req.body);
+router.patch("/updatePassword", auth, async (req, res) => {
+  try {
+    const oldPassword = req.body.oldPassword;
+    const newPassword = req.body.newPassword;
+
+    const user = await User.findByCredentials(req.user.email, oldPassword);
+
+    user.password = newPassword;
+    user.tokens = user.tokens.filter((token) => token.token === req.token);
+
+    await user.save();
+    res.status(200).send({ message: "Password change success" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+// //Admin adding Users
+// router.route('/add').post(function (req, res) {
+//   console.log(req.body)
 //   const user = new User(req.body);
-//   user
-//     .save()
-//     .then((user) => {
-//       res.status(200).json({ user: "User added successfully" });
+//   user.save()
+//     .then(user => {
+//       res.status(200).json({ 'user': 'User added successfully' });
 //     })
-//     .catch((err) => {
+//     .catch(err => {
 //       res.status(400).send("unable to save to database");
 //     });
 // });
 
-// router.route("/").get(function (req, res) {
-//   User.find(function (err, user) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       res.json(user);
-//     }
-//   });
-// });
+router.route("/").get(function (req, res) {
+  User.find(function (err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(user);
+    }
+  });
+});
 
 //get all employers count
 router.route("/countEmployers").get(function (req, res) {
@@ -270,5 +385,35 @@ router.route("/countEmployees").get(function (req, res) {
       });
     });
 });
+
+//Get Users by ID
+router.route('/view-user/:id').get(function(req, res) {
+  User.findById(req.params.id)
+  .then(response => {
+    res.status(200).send({
+      sucess:true,
+      message:"user Data sucess",
+      profile_data: response
+    })
+  })
+});
+
+//Delete Particular user
+
+router.route('/delete/:id').post(function (req, res) {
+  console.log(req.body);
+  User.findByIdAndDelete({_id: req.params.id })
+    .then(response=>{
+      console.log(res.body);
+      res.status(200).send({
+        success: true,
+        message: "User removed"
+      })
+    })
+})
+
+
+
+
 
 module.exports = router;

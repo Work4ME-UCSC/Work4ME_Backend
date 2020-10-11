@@ -26,6 +26,20 @@ const sendVerificationEmail = (email, host, token) => {
   });
 };
 
+const sendOtpEmail = (email, otp) => {
+  sgMail.send({
+    to: email,
+    from: "2017cs085@stu.ucsc.cmb.ac.lk",
+    subject: "One Time Pasword (OTP) Confirmation",
+    text:
+      "Dear Sir/ Madam,\n\n" +
+      "Please use the following OTP " +
+      otp +
+      " to complete your request.\n" +
+      "Do not share this number with anyone\n\n",
+  });
+};
+
 const cancelUserEmail = (email, name) => {
   sgMail.send({
     to: email,
@@ -35,8 +49,19 @@ const cancelUserEmail = (email, name) => {
   });
 };
 
+const sendJobConfirmEmail = (email, jobName) => {
+  sgMail.send({
+    to: email,
+    from: "2017cs085@stu.ucsc.cmb.ac.lk",
+    subject: `Job Confirmation (${jobName})`,
+    text: `Your job request for the job ${jobName} has been confirmed by the employer. You can cantact him for more details.`,
+  });
+};
+
 module.exports = {
   sendWelcomeEmail,
   sendVerificationEmail,
   cancelUserEmail,
+  sendOtpEmail,
+  sendJobConfirmEmail,
 };
