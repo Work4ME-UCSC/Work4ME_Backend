@@ -181,7 +181,7 @@ router.post("/login", async (req, res) => {
     );
 
     const token = await user.generateAuthToken();
-    //const streamToken = stream.createToken(`khosalan`);
+
     const streamToken = stream.devToken(user._id);
 
     res.send({ user, token, streamToken });
@@ -301,18 +301,42 @@ router.delete("/me/avatar", auth, async (req, res) => {
   res.status(200).send();
 });
 
-router.get("/:id/avatar", async (req, res) => {
+router.patch("/updateEmail", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const email = req.body.email;
+    const password = req.body.password;
+    const oldEmail = req.user.email;
 
-    if (!user || !user.avatar) {
-      throw new Error("Image not found");
-    }
+    const user = await User.findByCredentials(oldEmail, password);
+    const checkUser = await User.findOne({ email });
 
-    res.set("Content-Type", "image/png");
-    res.send(user.avatar);
+    if (checkUser)
+      throw new Error("Email address already in user by another user!");
+
+    user.email = email;
+
+    await user.save();
+
+    res.status(200).send({ message: "Email change success" });
   } catch (e) {
-    res.status(404).send({ error: e.message });
+    res.status(400).send({ error: e.message });
+  }
+});
+
+router.patch("/updatePassword", auth, async (req, res) => {
+  try {
+    const oldPassword = req.body.oldPassword;
+    const newPassword = req.body.newPassword;
+
+    const user = await User.findByCredentials(req.user.email, oldPassword);
+
+    user.password = newPassword;
+    user.tokens = user.tokens.filter((token) => token.token === req.token);
+
+    await user.save();
+    res.status(200).send({ message: "Password change success" });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
   }
 });
 
