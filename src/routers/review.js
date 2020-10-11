@@ -54,15 +54,31 @@ router.get("/retrieve/:id", auth, async (req, res) => {
     res.status(200).send({ review });
   } catch (e) {
     res.status(400).send({ error: e });
-  }
+  }3
 });
 
-//retrieve all the reviews
+// retrieve all the reviews
 router.get("/allreviews", async (req, res) => {
   UserReview.find()
     .populate(["ReviewByWhom", "ReviewToWhom"])
     .then((result) => res.status(200).send(result))
     .catch((err) => res.status.send({ error: err }));
 });
+
+
+// /** 
+// * @desc: Removes particular data from the collection upon deactivation
+// */
+// router.route('/deletereview/:id').post(function (req, res) {
+//   console.log(req.body);
+//   UserReview.deleteOne({_id: req.params.id })
+//     .then(response=>{
+//       console.log(res.body);
+//       res.status(200).send({
+//         success: true,
+//         message: "Review removed"
+//       })
+//     })
+// })
 
 module.exports = router;
