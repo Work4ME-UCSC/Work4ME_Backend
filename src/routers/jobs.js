@@ -201,42 +201,39 @@ router.route("/jobscompleted").get(function (req, res) {
 });
 
 //count according to the job type
-router.route("/countjobType").get(function (req, res) {
-  const jobTypeCount = [0, 0, 0];
+router.route("/countJobCategory").get(function (req, res) {
+  const jobCategoryCount = [0, 0, 0, 0, 0];
 
   Jobs.find().then((response) => {
     for (let i = 0; i < response.length; i++) {
+      //console.log("QQQQ",response[i].JobCategory)
       switch (response[i].JobCategory) {
+        case "Household":
+          jobCategoryCount[0]++;
+          break;
+
         case "IT":
-          jobTypeCount[0]++;
+          jobCategoryCount[1]++;
           break;
 
-        case "Data Entry":
-          jobTypeCount[1]++;
+        case "Driving":
+          jobCategoryCount[2]++;
           break;
 
-        case "Delivery Boy":
-          jobTypeCount[2]++;
+        case "Technician":
+          jobCategoryCount[3]++;
           break;
 
-        // case("Teaching"):
-        //   jobTypeCount[3]++;
-        //   break;
-
-        // case(""):
-        //   jobTypeCount[4]++;
-        //   break;
-
-        // case(""):
-        //   jobTypeCount[5]++;
-        //   break;
+        case "Education":
+          jobCategoryCount[4]++;
+          break;
       }
     }
 
-    console.log(jobTypeCount);
+    console.log(jobCategoryCount);
 
     res.status(200).send({
-      jobTypeCount: jobTypeCount,
+      jobCategoryCount: jobCategoryCount,
     });
   });
 });

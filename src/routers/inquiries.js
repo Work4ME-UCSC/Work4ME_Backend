@@ -1,10 +1,8 @@
 const express = require('express');
-const inquiries = require('../models/inquiries');
+const Inquiries = require('../models/inquiries');
 const router = express.Router();
 
-const Inquiries = require("../models/inquiries");
-
-//count total complaints
+//count total inquiries
 router.route('/countInquiries').get(function (req,res){
   Inquiries.find().countDocuments()
     .then(response=>{
@@ -32,6 +30,18 @@ router.route('/inquiriesDetails').get(function (req, res) {
     }
   });
   
+});
+
+//get solved inquiries count
+router.route("/inquiriesSolved").get(function (req, res) {
+  Inquiries.find({ status: true })
+    .countDocuments()
+    .then((response) => {
+      console.log("RESPONDE ",response)
+      res.status(200).send({
+        inquiriesSolved: response,
+      });
+    });
 });
 
 module.exports = router;
