@@ -165,6 +165,11 @@ router.delete("/job/:id", auth, async (req, res) => {
       owner: req.user._id,
     });
 
+    await EmployeeJobs.deleteMany({
+      jobDetails: req.params.id,
+      employerID: req.user._id,
+    });
+
     if (!job) return res.status(404).send();
 
     res.send(job);
@@ -196,46 +201,45 @@ router.route("/jobscompleted").get(function (req, res) {
 });
 
 //count according to the job type
-router.route('/countjobType').get(function (req,res){
-  const jobTypeCount = [0,0,0];
+router.route("/countjobType").get(function (req, res) {
+  const jobTypeCount = [0, 0, 0];
 
-  Jobs.find()
-    .then(response=>{
-      for (let i=0; i<response.length; i++){
-        switch(response[i].JobCategory){
-          case("IT"):
-            jobTypeCount[0]++;
-            break;
+  Jobs.find().then((response) => {
+    for (let i = 0; i < response.length; i++) {
+      switch (response[i].JobCategory) {
+        case "IT":
+          jobTypeCount[0]++;
+          break;
 
-          case("Data Entry"):
-            jobTypeCount[1]++;
-            break;
+        case "Data Entry":
+          jobTypeCount[1]++;
+          break;
 
-          case("Delivery Boy"):
-            jobTypeCount[2]++;
-            break;
-            
-          // case("Teaching"):
-          //   jobTypeCount[3]++;
-          //   break;
+        case "Delivery Boy":
+          jobTypeCount[2]++;
+          break;
 
-          // case(""):
-          //   jobTypeCount[4]++;
-          //   break;
+        // case("Teaching"):
+        //   jobTypeCount[3]++;
+        //   break;
 
-          // case(""):
-          //   jobTypeCount[5]++;
-          //   break;
-        }
+        // case(""):
+        //   jobTypeCount[4]++;
+        //   break;
+
+        // case(""):
+        //   jobTypeCount[5]++;
+        //   break;
+      }
     }
 
     console.log(jobTypeCount);
 
     res.status(200).send({
-      jobTypeCount: jobTypeCount
-    })
-  })
-})
+      jobTypeCount: jobTypeCount,
+    });
+  });
+});
 
 // app.get('/' ,(req,res) => {
 //     res.send('<h1> Hello Ram </h1>')

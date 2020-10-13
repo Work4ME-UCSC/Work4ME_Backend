@@ -54,7 +54,7 @@ router.get("/retrieve/:id", auth, async (req, res) => {
     res.status(200).send({ review });
   } catch (e) {
     res.status(400).send({ error: e });
-  }3
+  }
 });
 
 // retrieve all the reviews
@@ -65,8 +65,7 @@ router.get("/allreviews", async (req, res) => {
     .catch((err) => res.status.send({ error: err }));
 });
 
-
-// /** 
+// /**
 // * @desc: Removes particular data from the collection upon deactivation
 // */
 // router.route('/deletereview/:id').post(function (req, res) {

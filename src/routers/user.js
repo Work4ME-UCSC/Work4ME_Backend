@@ -29,7 +29,7 @@ const stream = new StreamChat(
 );
 
 router.post("/signup", async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   const user = new User(req.body);
 
   try {
@@ -387,33 +387,27 @@ router.route("/countEmployees").get(function (req, res) {
 });
 
 //Get Users by ID
-router.route('/view-user/:id').get(function(req, res) {
-  User.findById(req.params.id)
-  .then(response => {
+router.route("/view-user/:id").get(function (req, res) {
+  User.findById(req.params.id).then((response) => {
     res.status(200).send({
-      sucess:true,
-      message:"user Data sucess",
-      profile_data: response
-    })
-  })
+      sucess: true,
+      message: "user Data sucess",
+      profile_data: response,
+    });
+  });
 });
 
 //Delete Particular user
 
-router.route('/delete/:id').post(function (req, res) {
+router.route("/delete/:id").post(function (req, res) {
   console.log(req.body);
-  User.findByIdAndDelete({_id: req.params.id })
-    .then(response=>{
-      console.log(res.body);
-      res.status(200).send({
-        success: true,
-        message: "User removed"
-      })
-    })
-})
-
-
-
-
+  User.findByIdAndDelete({ _id: req.params.id }).then((response) => {
+    console.log(res.body);
+    res.status(200).send({
+      success: true,
+      message: "User removed",
+    });
+  });
+});
 
 module.exports = router;
